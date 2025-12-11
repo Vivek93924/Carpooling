@@ -12,4 +12,5 @@ public class RideDTO {
     private LocalTime time;
     private Integer availableSeats;  // use Integer instead of int
     private Double price;
+    private String vehicleModel;
 }

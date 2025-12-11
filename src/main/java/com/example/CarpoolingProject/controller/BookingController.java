@@ -65,8 +65,8 @@ public class BookingController {
     }
 
     // ===== New: Driver accept/reject booking =====
-    @PostMapping("/bookings/{bookingId}/{action}") // action = accept or reject
-    public String handleBookingAction(
+    @PostMapping("/bookings/{bookingId}/{action}")
+    public Booking handleBookingAction(
             @PathVariable Long bookingId,
             @PathVariable String action,
             @RequestHeader("Authorization") String authHeader) {
@@ -78,14 +78,16 @@ public class BookingController {
         String token = authHeader.replace("Bearer", "").trim();
         String email = jwtUtil.extractEmail(token);
 
+        Booking updatedBooking;
         if ("accept".equalsIgnoreCase(action)) {
-            service.acceptBooking(bookingId, email);
-            return "Booking accepted successfully";
+            updatedBooking = service.acceptBooking(bookingId, email);
         } else if ("reject".equalsIgnoreCase(action)) {
-            service.rejectBooking(bookingId, email);
-            return "Booking rejected successfully";
+            updatedBooking = service.rejectBooking(bookingId, email);
         } else {
             throw new RuntimeException("Invalid action: " + action);
         }
+
+        return updatedBooking;
     }
+
 }

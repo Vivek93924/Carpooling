@@ -125,48 +125,36 @@ const handleBookingAction = async (bookingId, action) => {
     const token = localStorage.getItem("token");
     if (!token) throw new Error("No token found");
 
-    // Call backend
-    await API.post(
+    // Call backend and get the updated booking
+    const response = await API.post(
       `/booking/bookings/${bookingId}/${action}`,
       {},
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
+    const updatedBooking = response.data;
+    const updatedRide = updatedBooking.ride;
+
     // Remove booking request from UI
     setBookingRequests(prev =>
-      prev.filter(br => (br?.id || br?.bookingId) !== bookingId)
+      prev.filter(br => br.id !== bookingId)
     );
 
-    // 🔥 Fetch updated rides so seat count is accurate
-    const updatedRides = await API.get("/driver/rides", {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    // Update rides in UI
-    const rides = updatedRides.data;
-    const now = new Date();
-
-    const parseDateTime = (ride) =>
-      new Date(`${ride.date} ${ride.time || "00:00"}`);
-
-    setMyPostedRides(rides.filter(r => parseDateTime(r) >= now));
-    setCompletedRides(rides.filter(r => parseDateTime(r) < now));
+    // Update myPostedRides directly
+    setMyPostedRides(prev =>
+      prev.map(ride =>
+        ride.id === updatedRide.id ? updatedRide : ride
+      )
+    );
 
     alert(
-      action === "accept"
-        ? "Booking accepted!"
-        : "Booking rejected"
+      action === "accept" ? "Booking accepted!" : "Booking rejected!"
     );
-
   } catch (error) {
     console.error("Booking action failed:", error);
     alert(error.response?.data?.message || "Action failed.");
   }
 };
-
-
-
-
 
 
 
@@ -339,7 +327,8 @@ const handleBookingAction = async (bookingId, action) => {
                 ) : (
                   <div className="space-y-4">
                     {myPostedRides.filter(ride => ride && ride.id).map((ride) => {
-                      const bookedSeats = ride.seats - (ride.availableSeats ?? 0);
+                       const bookedSeats = ride.bookedSeats ?? (totalSeats - (ride.availableSeats ?? totalSeats));
+                       const totalSeats = bookedSeats + (ride.availableSeats ?? 0);
                       return (
                         <div key={ride.id} className="bg-black bg-opacity-40 backdrop-blur-md rounded-2xl shadow-2xl p-6 border border-purple-500 border-opacity-30">
                           <div className="flex justify-between items-start">
@@ -355,7 +344,7 @@ const handleBookingAction = async (bookingId, action) => {
                                   </span>
                                 )}
                                 <span className="text-purple-200">
-                                  {bookedSeats}/{ride.seats} seats booked
+                                  {bookedSeats}/{totalSeats} seats booked
                                 </span>
                               </div>
 
@@ -382,30 +371,38 @@ const handleBookingAction = async (bookingId, action) => {
                                 </div>
                               </div>
 
-                              <div className="mt-4">
-                                <h4 className="text-sm font-medium text-purple-200 mb-2">Passengers:</h4>
-                                {ride.passengers && ride.passengers.length > 0 ? (
-                                  <div className="space-y-2">
-                                    {ride.passengers.map((passenger, idx) => (
-                                      <div key={idx} className="flex items-center justify-between bg-purple-900 bg-opacity-30 p-3 rounded-lg">
-                                        <div className="flex items-center space-x-3">
-                                          <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                                            {passenger.name.split(' ').map(n => n[0]).join('')}
-                                          </div>
-                                          <div>
-                                            <p className="font-medium text-white">{passenger.name}</p>
-                                            <p className="text-xs text-purple-300">{passenger.phone}</p>
-                                          </div>
-                                        </div>
-                                        <button className="text-pink-400 hover:text-pink-300 text-sm">Contact</button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <p className="text-purple-300 text-sm mt-1">No passengers yet</p>
-                                )}
-                              </div>
-                            </div>
+                               <div className="mt-4">
+                                                    <h4 className="text-sm font-medium text-purple-200 mb-2">Passengers:</h4>
+                                                    {ride.bookings && ride.bookings.length > 0 ? (
+                                                      <div className="space-y-2">
+                                                        {ride.bookings.map((booking, idx) => (
+                                                          <div
+                                                            key={idx}
+                                                            className="flex items-center justify-between bg-purple-900 bg-opacity-30 p-3 rounded-lg"
+                                                          >
+                                                            <div className="flex items-center space-x-3">
+                                                              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                                                {booking.passenger.name
+                                                                  .split(' ')
+                                                                  .map(n => n[0])
+                                                                  .join('')}
+                                                              </div>
+                                                              <div>
+                                                                <p className="font-medium text-white">{booking.passenger.name}</p>
+                                                                <p className="text-xs text-purple-300">{booking.passenger.phone}</p>
+                                                              </div>
+                                                            </div>
+                                                            <button className="text-pink-400 hover:text-pink-300 text-sm">
+                                                              Contact
+                                                            </button>
+                                                          </div>
+                                                        ))}
+                                                      </div>
+                                                    ) : (
+                                                      <p className="text-purple-300 text-sm mt-1">No passengers yet</p>
+                                                    )}
+                                                  </div>
+                                                </div>
 
                             <div className="ml-6 text-right">
                               <div className="text-2xl font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent mb-2">

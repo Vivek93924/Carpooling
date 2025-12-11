@@ -13,5 +13,6 @@ public class PassengerDashboardDTO {
     private int seatsBooked;
     private double price;
     private String driverName;
-    private String driverContact; // <-- add this
+    private String driverContact;
+    private String vehicleModel;// <-- add this
 }

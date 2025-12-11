@@ -14,4 +14,6 @@ public class DriverDashboardDTO {
     private double price;
     private String passengerName;
     private String passengerContact; // <-- add this
+    private String vehicleModel; // getter & setter
+
 }

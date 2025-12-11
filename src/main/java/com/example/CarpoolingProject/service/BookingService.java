@@ -51,7 +51,7 @@ public class BookingService {
 
         Long seatsToBook = booking.getSeatsBooked();
 
-        // 🔥 FIX: reduce only availableSeats, DO NOT increase bookedSeats here
+        // 🔥 Reduce available seats immediately
         ride.setAvailableSeats(ride.getAvailableSeats() - seatsToBook);
 
         rideRepo.save(ride);
@@ -69,11 +69,8 @@ public class BookingService {
 
     // -------------------- DRIVER BOOKING REQUESTS --------------------
     public List<Booking> getBookingRequestsForDriver(String driverEmail) {
-
         User driver = userRepo.findByEmail(driverEmail)
                 .orElseThrow(() -> new RuntimeException("Driver not found"));
-
-        // ✅ IMPORTANT FIX: only PENDING requests
         return bookingRepo.findByRide_DriverAndStatus(driver, "PENDING");
     }
 
@@ -97,7 +94,7 @@ public class BookingService {
 
 
     // -------------------- ACCEPT BOOKING --------------------
-    public void acceptBooking(Long bookingId, String driverEmail) {
+    public Booking acceptBooking(Long bookingId, String driverEmail) {
         Booking booking = bookingRepo.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
@@ -108,18 +105,21 @@ public class BookingService {
 
         booking.setStatus("ACCEPTED");
 
-        // 🔥 Move seats from pending to confirmed
+        // Move seats from pending to confirmed
         ride.setBookedSeats(ride.getBookedSeats() + booking.getSeatsBooked());
 
         rideRepo.save(ride);
-        bookingRepo.save(booking);
+        Booking updatedBooking = bookingRepo.save(booking);
 
+        // Send emails
         sendBookingEmails(ride.getDriver(), booking.getPassenger(), ride, booking.getSeatsBooked());
+
+        return updatedBooking; // <-- Return updated booking
     }
 
 
     // -------------------- REJECT BOOKING --------------------
-    public void rejectBooking(Long bookingId, String driverEmail) {
+    public Booking rejectBooking(Long bookingId, String driverEmail) {
         Booking booking = bookingRepo.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
@@ -134,7 +134,9 @@ public class BookingService {
         ride.setAvailableSeats(ride.getAvailableSeats() + booking.getSeatsBooked());
 
         rideRepo.save(ride);
-        bookingRepo.save(booking);
+        Booking updatedBooking = bookingRepo.save(booking);
+
+        return updatedBooking; // <-- Return updated booking
     }
 
 
@@ -161,7 +163,7 @@ public class BookingService {
 
         } catch (Exception ex) {
             System.out.println("Email sending failed ❌: " + ex.getMessage());
-            ex.printStackTrace(); // 🔥 Print full error
+            ex.printStackTrace();
         }
     }
 }

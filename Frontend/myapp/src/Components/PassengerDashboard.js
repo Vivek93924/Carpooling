@@ -467,8 +467,10 @@ const handleBooking = async (rideId, seats) => {
                           </div>
 
                           <div className="flex items-center space-x-4 text-sm text-purple-200">
-                            <span>🚗 {ride.vehicle}</span>
-                            <span>👥 {ride.seats} seats</span>
+                            <span>🚗 {ride.vehicleModel || "N/A"}</span>
+
+
+                            <span>👥 {ride.availableSeats} seats</span>
                             <span>📏 {ride.distance}</span>
                           </div>
                         </div>

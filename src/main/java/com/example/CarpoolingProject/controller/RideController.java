@@ -70,4 +70,6 @@ public class RideController {
 
         return bookingService.getBookingRequestsForDriver(driverEmail);
     }
+    // ---------------- UPDATE RIDE SEATS AFTER BOOKING ----------------
+
 }

@@ -40,6 +40,11 @@ public class DashboardService {
 
                     dto.setDriverName(b.getRide().getDriver().getName());
                     dto.setDriverContact(b.getRide().getDriver().getPhone());
+                    dto.setVehicleModel(
+                            b.getRide().getDriver() != null
+                                    ? b.getRide().getDriver().getVehicleModel()
+                                    : "N/A"
+                    );
                     return dto;
                 }).collect(Collectors.toList());
     }
@@ -63,6 +68,7 @@ public class DashboardService {
 
                     dto.setPassengerName(b.getPassenger().getName());
                     dto.setPassengerContact(b.getPassenger().getPhone());
+
                     return dto;
                 }).collect(Collectors.toList());
     }

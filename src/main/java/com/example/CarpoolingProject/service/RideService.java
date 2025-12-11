@@ -57,4 +57,18 @@ public class RideService {
 
         return rideRepository.findByDriver(driver);
     }
+    public Ride updateRideSeats(Long rideId, Long newlyBooked) {
+
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new RuntimeException("Ride not found"));
+
+        // Increase booked seats
+        ride.setBookedSeats(ride.getBookedSeats() + newlyBooked);
+
+        // Decrease available seats
+        ride.setAvailableSeats(ride.getAvailableSeats() - newlyBooked);
+
+        return rideRepository.save(ride);
+    }
+
 }
